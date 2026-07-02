@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Subtle elegant circular background element to frame the icon -->
+    <path
+        android:pathData="M54,22 A32,32 0 1,1 53.999,22 Z"
+        android:fillColor="#15FFFFFF" />
+
+    <!-- Open Book Base Layer -->
+    <path
+        android:pathData="M24,70 C36,67 48,71 54,74 C60,71 72,67 84,70 L84,38 C72,35 60,39 54,42 C48,39 36,35 24,38 Z"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="24"
+                android:startY="38"
+                android:endX="84"
+                android:endY="74"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#EADDFF" />
+                <item android:offset="1.0" android:color="#80DEEA" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Book Center Spine line -->
+    <path
+        android:pathData="M54,42 L54,74"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="54"
+                android:startY="42"
+                android:endX="54"
+                android:endY="74"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#EADDFF" />
+                <item android:offset="1.0" android:color="#80DEEA" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Microscope silhouette centered inside/above the book -->
+    <!-- Base: bottom line of the microscope (just above the spine) -->
+    <path
+        android:pathData="M44,64 L64,64"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF" />
+
+    <!-- Stage and arm -->
+    <path
+        android:pathData="M40,56 L60,56 M54,64 L54,56 C54,56 61,56 61,48 C61,40 54,40 54,40"
+        android:strokeWidth="3"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF" />
+
+    <!-- Tube & Lens -->
+    <path
+        android:pathData="M47,32 L47,50"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="47"
+                android:startY="32"
+                android:endX="47"
+                android:endY="50"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFFF" />
+                <item android:offset="1.0" android:color="#D0BCFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Eyepiece and knob -->
+    <path
+        android:pathData="M44,28 L50,28 M47,28 L47,32"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF" />
+
+    <path
+        android:pathData="M56,46 A1.5,1.5 0 1,1 55.999,46 Z"
+        android:fillColor="#80DEEA" />
+
+</vector>
