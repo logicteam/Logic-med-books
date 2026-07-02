@@ -1,0 +1,129 @@
+Build APK from Google AI Studio on Phone (No Android Studio Required)
+Welcome to N-Educate and Thank you for Watching.
+
+___________________________________________________________________________
+
+This guide shows how to build a working Android APK from a Google AI Studio Android project using only your phone and GitHub. If Google AI Studio does not provide a working APK or you experience APK download issues, you can use this method to build the APK online and install it on your Android device without Android Studio.
+
+____________________________________________________________________________
+
+
+File Name
+
+—-----------
+
+.github/workflows/build.yml
+
+
+____________________________________________________________________________
+
+Code to Remove from build.gradle.kts
+
+—-----------------------------------------------
+
+Find
+
+____________________________________________________________________________
+
+debug {
+
+  signingConfig = signingConfigs.getByName("debugConfig")
+
+}
+
+____________________________________________________________________________
+
+
+Remove only:
+
+____________________________________________________________________________
+
+signingConfig = signingConfigs.getByName("debugConfig")
+
+____________________________________________________________________________
+
+So it becomes:
+
+____________________________________________________________________________
+
+debug {
+
+}
+
+____________________________________________________________________________
+
+
+
+
+____________________________________________________________________________
+
+GitHub Actions Code
+
+—-------------------------
+
+Code Start Here
+
+____________________________________________________________________________
+
+
+name: Build APK
+
+
+on:
+
+  push:
+
+    branches:
+
+      - main
+
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+
+    steps:
+
+      - name: Checkout source
+
+        uses: actions/checkout@v4
+
+
+      - name: Set up JDK 17
+
+        uses: actions/setup-java@v4
+
+        with:
+
+          distribution: temurin
+
+          java-version: 17
+
+
+      - name: Setup Android SDK
+
+        uses: android-actions/setup-android@v3
+
+
+      - name: Setup Gradle
+
+        uses: gradle/actions/setup-gradle@v4
+
+
+      - name: Build Debug APK
+
+        run: gradle assembleDebug --stacktrace
+
+
+      - name: Upload APK
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: app-debug-apk
+
+          path: app/build/outputs/apk/debug/app-debug.apk
