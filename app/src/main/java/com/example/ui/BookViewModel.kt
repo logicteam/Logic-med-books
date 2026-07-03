@@ -38,6 +38,9 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<BookUiState>(BookUiState.Loading)
     val uiState: StateFlow<BookUiState> = _uiState
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing
+
     private val _downloadState = MutableStateFlow<DownloadState>(DownloadState.Idle)
     val downloadState: StateFlow<DownloadState> = _downloadState
 
@@ -93,6 +96,14 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
             else -> null
         }
     )
+    
+    val isGridView = MutableStateFlow(prefs.getBoolean("is_grid_view", true))
+
+    fun toggleLayoutMode() {
+        val nextVal = !isGridView.value
+        isGridView.value = nextVal
+        prefs.edit().putBoolean("is_grid_view", nextVal).apply()
+    }
 
     private val _categories = MutableStateFlow<List<String>>(listOf("All"))
     val categories: StateFlow<List<String>> = _categories
@@ -187,6 +198,33 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 e.printStackTrace()
                 _uiState.value = BookUiState.Error(e.message ?: "Failed to load medical books")
+            }
+        }
+    }
+
+    fun refreshBooks() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                val url = SecurityUtils.getDecryptedUrl()
+                val fetchedBooks = repository.getBooksFromApi(url)
+                _books.value = fetchedBooks
+                
+                val distinctCategories = fetchedBooks
+                    .mapNotNull { it.category?.trim() }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .sorted()
+                
+                _categories.value = listOf("All") + distinctCategories
+                _uiState.value = BookUiState.Success(fetchedBooks)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                if (_uiState.value !is BookUiState.Success) {
+                    _uiState.value = BookUiState.Error(e.message ?: "Failed to refresh medical books")
+                }
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }

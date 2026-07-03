@@ -61,6 +61,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.activity.compose.BackHandler
+import android.app.Activity
+import android.content.ContextWrapper
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import com.example.R
 import com.example.data.Book
 import com.example.ui.BookUiState
@@ -72,7 +78,73 @@ fun BookAppContent(
     viewModel: BookViewModel,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val currentReadingBook by viewModel.currentReadingBook.collectAsState()
+    var selectedBook by remember { mutableStateOf<Book?>(null) }
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    fun findActivity(ctx: android.content.Context): Activity? {
+        var currentContext = ctx
+        while (currentContext is ContextWrapper) {
+            if (currentContext is Activity) return currentContext
+            currentContext = currentContext.baseContext
+        }
+        return null
+    }
+
+    // Handle back buttons
+    BackHandler(enabled = currentReadingBook != null) {
+        viewModel.stopReadingBook()
+    }
+
+    BackHandler(enabled = currentReadingBook == null && selectedBook != null) {
+        selectedBook = null
+    }
+
+    BackHandler(enabled = currentReadingBook == null && selectedBook == null) {
+        showExitDialog = true
+    }
+
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = {
+                Text(
+                    text = "Exit Application",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to exit Logic Med Books?",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitDialog = false
+                        findActivity(context)?.finish()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    modifier = Modifier.testTag("exit_confirm_btn")
+                ) {
+                    Text("Exit", color = MaterialTheme.colorScheme.onError)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showExitDialog = false },
+                    modifier = Modifier.testTag("exit_cancel_btn")
+                ) {
+                    Text("Cancel")
+                }
+            },
+            modifier = Modifier.testTag("exit_dialog")
+        )
+    }
 
     AnimatedContent(
         targetState = currentReadingBook,
@@ -90,7 +162,6 @@ fun BookAppContent(
             )
         } else {
             var currentTab by remember { mutableStateOf("books") }
-            var selectedBook by remember { mutableStateOf<Book?>(null) }
 
             Scaffold(
                 bottomBar = {
@@ -155,6 +226,7 @@ fun BookAppContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BooksFeedTab(
     viewModel: BookViewModel,
@@ -168,6 +240,7 @@ fun BooksFeedTab(
     val categories by viewModel.categories.collectAsState()
     val focusManager = LocalFocusManager.current
     val isDarkThemeOverride by viewModel.isDarkThemeOverride.collectAsState()
+    val isGridView by viewModel.isGridView.collectAsState()
 
     Column(
         modifier = Modifier
@@ -203,6 +276,18 @@ fun BooksFeedTab(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Layout Grid/List toggle Button
+                IconButton(
+                    onClick = { viewModel.toggleLayoutMode() },
+                    modifier = Modifier.testTag("layout_toggle_feed")
+                ) {
+                    Icon(
+                        imageVector = if (isGridView) Icons.Default.ViewList else Icons.Default.GridView,
+                        contentDescription = "Toggle Layout Mode",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
                 // Theme Toggle Icon Button
                 IconButton(
                     onClick = {
@@ -225,24 +310,7 @@ fun BooksFeedTab(
                     )
                 }
 
-                // Developer Spotlight Profile Avatar
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .clickable { onOpenAbout() }
-                        .testTag("avatar_profile"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "MB",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    )
-                }
+
             }
         }
 
@@ -324,11 +392,16 @@ fun BooksFeedTab(
         }
 
         // Main Books list grid content
-        Box(
+        val isRefreshing by viewModel.isRefreshing.collectAsState()
+
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { viewModel.refreshBooks() },
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(horizontal = 16.dp)
+                .testTag("pull_to_refresh_feed")
         ) {
             when (val state = uiState) {
                 is BookUiState.Loading -> {
@@ -343,7 +416,8 @@ fun BooksFeedTab(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(24.dp),
+                            .padding(24.dp)
+                            .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -372,7 +446,8 @@ fun BooksFeedTab(
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(24.dp),
+                                .padding(24.dp)
+                                .verticalScroll(rememberScrollState()),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -388,18 +463,35 @@ fun BooksFeedTab(
                             )
                         }
                     } else {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            contentPadding = PaddingValues(bottom = 24.dp)
-                        ) {
-                            items(filteredBooks) { book ->
-                                BookGridCard(
-                                    book = book,
-                                    viewModel = viewModel,
-                                    onClick = { onBookSelected(book) }
-                                )
+                        if (isGridView) {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                                contentPadding = PaddingValues(bottom = 24.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(filteredBooks) { book ->
+                                    BookGridCard(
+                                        book = book,
+                                        viewModel = viewModel,
+                                        onClick = { onBookSelected(book) }
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(bottom = 24.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(filteredBooks) { book ->
+                                    BookListCard(
+                                        book = book,
+                                        viewModel = viewModel,
+                                        onClick = { onBookSelected(book) }
+                                    )
+                                }
                             }
                         }
                     }
@@ -641,6 +733,130 @@ fun BookGridCard(
                             color = MaterialTheme.colorScheme.primary
                         )
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BookListCard(
+    book: Book,
+    viewModel: BookViewModel,
+    onClick: () -> Unit
+) {
+    val favoriteBooks by viewModel.favoriteBooks.collectAsState()
+    val isFav = favoriteBooks.any { it.title.equals(book.title, ignoreCase = true) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .testTag("book_item_list_${book.title}"),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Book cover container on the left
+            Box(
+                modifier = Modifier
+                    .width(90.dp)
+                    .height(120.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
+            ) {
+                if (!book.cover.isNullOrEmpty()) {
+                    SubcomposeAsyncImage(
+                        model = book.cover,
+                        contentDescription = "Cover of ${book.title}",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        loading = {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        },
+                        error = {
+                            DefaultBookCoverFallback(title = book.title ?: "Medical Book")
+                        }
+                    )
+                } else {
+                    DefaultBookCoverFallback(title = book.title ?: "Medical Book")
+                }
+            }
+
+            // Title, Author and Badge metadata on the right
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(12.dp)
+                    .align(Alignment.CenterVertically)
+            ) {
+                Text(
+                    text = book.title ?: "Untitled",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = book.author ?: "Unknown Author",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    val languageStr = if (!book.language.isNullOrEmpty()) book.language else "Reference"
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = languageStr.uppercase(),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    }
+
+                    // Interactive Favorite toggle heart button
+                    IconButton(
+                        onClick = { viewModel.toggleFavorite(book) },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = CircleShape)
+                            .testTag("fav_btn_list_${book.title}")
+                    ) {
+                        Icon(
+                            imageVector = if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = "Toggle Favorite",
+                            tint = if (isFav) Color.Red else MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }
