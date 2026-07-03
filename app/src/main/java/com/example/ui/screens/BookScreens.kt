@@ -48,6 +48,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import androidx.compose.ui.viewinterop.AndroidView
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import java.net.URLEncoder
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.graphics.Bitmap
@@ -83,6 +87,7 @@ fun BookAppContent(
     val context = LocalContext.current
     val currentReadingBook by viewModel.currentReadingBook.collectAsState()
     var selectedBook by remember { mutableStateOf<Book?>(null) }
+    var onlineReadingBook by remember { mutableStateOf<Book?>(null) }
     var showExitDialog by remember { mutableStateOf(false) }
 
     fun findActivity(ctx: android.content.Context): Activity? {
@@ -99,11 +104,15 @@ fun BookAppContent(
         viewModel.stopReadingBook()
     }
 
-    BackHandler(enabled = currentReadingBook == null && selectedBook != null) {
+    BackHandler(enabled = currentReadingBook == null && onlineReadingBook != null) {
+        onlineReadingBook = null
+    }
+
+    BackHandler(enabled = currentReadingBook == null && onlineReadingBook == null && selectedBook != null) {
         selectedBook = null
     }
 
-    BackHandler(enabled = currentReadingBook == null && selectedBook == null) {
+    BackHandler(enabled = currentReadingBook == null && onlineReadingBook == null && selectedBook == null) {
         showExitDialog = true
     }
 
@@ -165,63 +174,72 @@ fun BookAppContent(
         } else {
             var currentTab by remember { mutableStateOf("books") }
 
-            Scaffold(
-                bottomBar = {
-                    if (selectedBook == null) {
-                        GeometricBottomNav(
-                            currentTab = currentTab,
-                            onTabSelected = { currentTab = it }
-                        )
-                    }
-                },
-                modifier = modifier.fillMaxSize()
-            ) { innerPadding ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(innerPadding)
-                ) {
-                    AnimatedContent(
-                        targetState = selectedBook != null,
-                        transitionSpec = {
-                            slideInHorizontally { width -> width } + fadeIn() togetherWith
-                                    slideOutHorizontally { width -> -width } + fadeOut()
-                        },
-                        label = "ScreenTransition"
-                    ) { isDetailOpen ->
-                        if (isDetailOpen) {
-                            selectedBook?.let { book ->
-                                BookDetailScreen(
-                                    book = book,
-                                    viewModel = viewModel,
-                                    onBack = { selectedBook = null }
-                                )
-                            }
-                        } else {
-                            Crossfade(targetState = currentTab, label = "TabTransition") { tab ->
-                                when (tab) {
-                                    "books" -> BooksFeedTab(
+            if (onlineReadingBook != null) {
+                OnlineReaderScreen(
+                    book = onlineReadingBook!!,
+                    viewModel = viewModel,
+                    onClose = { onlineReadingBook = null }
+                )
+            } else {
+                Scaffold(
+                    bottomBar = {
+                        if (selectedBook == null) {
+                            GeometricBottomNav(
+                                currentTab = currentTab,
+                                onTabSelected = { currentTab = it }
+                            )
+                        }
+                    },
+                    modifier = modifier.fillMaxSize()
+                ) { innerPadding ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(innerPadding)
+                    ) {
+                        AnimatedContent(
+                            targetState = selectedBook != null,
+                            transitionSpec = {
+                                slideInHorizontally { width -> width } + fadeIn() togetherWith
+                                        slideOutHorizontally { width -> -width } + fadeOut()
+                            },
+                            label = "ScreenTransition"
+                        ) { isDetailOpen ->
+                            if (isDetailOpen) {
+                                selectedBook?.let { book ->
+                                    BookDetailScreen(
+                                        book = book,
                                         viewModel = viewModel,
-                                        onBookSelected = { selectedBook = it },
-                                        onOpenAbout = { currentTab = "about" }
+                                        onBack = { selectedBook = null },
+                                        onReadOnline = { onlineReadingBook = book }
                                     )
-                                    "favorites" -> FavoritesTab(
-                                        viewModel = viewModel,
-                                        onBookSelected = { selectedBook = it }
-                                    )
-                                    "offline" -> OfflineTab(
-                                        viewModel = viewModel,
-                                        onBookSelected = { selectedBook = it },
-                                        onNavigateToFeed = { currentTab = "books" }
-                                    )
-                                    "about" -> AboutTab(viewModel = viewModel)
+                                }
+                            } else {
+                                Crossfade(targetState = currentTab, label = "TabTransition") { tab ->
+                                    when (tab) {
+                                        "books" -> BooksFeedTab(
+                                            viewModel = viewModel,
+                                            onBookSelected = { selectedBook = it },
+                                            onOpenAbout = { currentTab = "about" }
+                                        )
+                                        "favorites" -> FavoritesTab(
+                                            viewModel = viewModel,
+                                            onBookSelected = { selectedBook = it }
+                                        )
+                                        "offline" -> OfflineTab(
+                                            viewModel = viewModel,
+                                            onBookSelected = { selectedBook = it },
+                                            onNavigateToFeed = { currentTab = "books" }
+                                        )
+                                        "about" -> AboutTab(viewModel = viewModel)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    DownloadProgressDialog(viewModel = viewModel)
+                        DownloadProgressDialog(viewModel = viewModel)
+                    }
                 }
             }
         }
@@ -897,10 +915,14 @@ fun DefaultBookCoverFallback(title: String) {
 fun BookDetailScreen(
     book: Book,
     viewModel: BookViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onReadOnline: () -> Unit
 ) {
     val favoriteBooks by viewModel.favoriteBooks.collectAsState()
     val isFav = favoriteBooks.any { it.title.equals(book.title, ignoreCase = true) }
+    val downloadedBooks by viewModel.downloadedBooks.collectAsState()
+    val downloadedBook = downloadedBooks.find { it.title.equals(book.title, ignoreCase = true) }
+    val isDownloaded = downloadedBook != null
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
@@ -1067,42 +1089,383 @@ fun BookDetailScreen(
 
             Spacer(modifier = Modifier.height(36.dp))
 
-            // Download Button
+            // Action Buttons
             if (!book.url.isNullOrEmpty()) {
-                Button(
-                    onClick = {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                            viewModel.downloadBookPdf(book)
-                        } else {
-                            val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
-                                context,
-                                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                            if (hasPermission) {
-                                viewModel.downloadBookPdf(book)
-                            } else {
-                                requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Read Online Button (Primary)
+                    Button(
+                        onClick = onReadOnline,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .testTag("read_online_button"),
+                        shape = RoundedCornerShape(26.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = "Read Online"
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.read_online),
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+
+                    // Download / Offline Button
+                    if (isDownloaded) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Read Offline Button
+                            Button(
+                                onClick = {
+                                    downloadedBook?.let { viewModel.startReadingBook(it) }
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(52.dp)
+                                    .testTag("read_offline_button"),
+                                shape = RoundedCornerShape(26.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MenuBook,
+                                    contentDescription = "Read Offline"
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.read_offline_btn),
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            }
+
+                            // Re-download Button
+                            OutlinedButton(
+                                onClick = {
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                                        viewModel.downloadBookPdf(book)
+                                    } else {
+                                        val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                                            context,
+                                            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                        if (hasPermission) {
+                                            viewModel.downloadBookPdf(book)
+                                        } else {
+                                            requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .testTag("re_download_button"),
+                                shape = RoundedCornerShape(26.dp),
+                                contentPadding = PaddingValues(0.dp),
+                                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Re-download",
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .testTag("download_button"),
-                    shape = RoundedCornerShape(26.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    } else {
+                        // Download Button (Secondary / Outlined)
+                        OutlinedButton(
+                            onClick = {
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                                    viewModel.downloadBookPdf(book)
+                                } else {
+                                    val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                                        context,
+                                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                    if (hasPermission) {
+                                        viewModel.downloadBookPdf(book)
+                                    } else {
+                                        requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .testTag("download_button"),
+                            shape = RoundedCornerShape(26.dp),
+                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = "Download"
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.download_ref_book),
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OnlineReaderScreen(
+    book: Book,
+    viewModel: BookViewModel,
+    onClose: () -> Unit
+) {
+    val context = LocalContext.current
+    var downloadProgress by remember { mutableStateOf(0f) }
+    var isLoading by remember { mutableStateOf(true) }
+    var hasError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    val rawUrl = book.url
+    val title = book.title ?: "Untitled"
+
+    LaunchedEffect(rawUrl) {
+        if (rawUrl.isNullOrEmpty()) {
+            hasError = true
+            errorMessage = "Invalid book URL."
+            isLoading = false
+            return@LaunchedEffect
+        }
+
+        try {
+            isLoading = true
+            hasError = false
+            downloadProgress = 0f
+
+            withContext(Dispatchers.IO) {
+                var formattedUrl = rawUrl.trim()
+                if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+                    formattedUrl = "https://$formattedUrl"
+                }
+
+                val urlConnection = java.net.URL(formattedUrl).openConnection() as java.net.HttpURLConnection
+                urlConnection.connectTimeout = 20000
+                urlConnection.readTimeout = 20000
+                urlConnection.connect()
+
+                val responseCode = urlConnection.responseCode
+                if (responseCode != java.net.HttpURLConnection.HTTP_OK) {
+                    throw Exception("Server returned HTTP $responseCode")
+                }
+
+                val fileLength = urlConnection.contentLength
+                val inputStream = urlConnection.inputStream
+
+                val sanitizedTitle = title.replace("[^a-zA-Z0-9]".toRegex(), "_")
+                val tempFile = java.io.File(context.cacheDir, "${sanitizedTitle}_temp.pdf")
+                if (tempFile.exists()) {
+                    tempFile.delete()
+                }
+                val outputStream = java.io.FileOutputStream(tempFile)
+
+                val data = ByteArray(8192) // Larger buffer for faster download
+                var total: Long = 0
+                var count: Int
+                while (inputStream.read(data).also { count = it } != -1) {
+                    total += count
+                    if (fileLength > 0) {
+                        downloadProgress = total.toFloat() / fileLength.toFloat()
+                    } else {
+                        downloadProgress = -1f // indeterminate
+                    }
+                    outputStream.write(data, 0, count)
+                }
+
+                outputStream.flush()
+                outputStream.close()
+                inputStream.close()
+
+                val tempDownloadedBook = com.example.data.local.DownloadedBook(
+                    title = book.title ?: "Untitled",
+                    author = book.author,
+                    category = book.category,
+                    description = book.description,
+                    cover = book.cover,
+                    url = book.url,
+                    language = book.language,
+                    timestamp = book.timestamp,
+                    localFilePath = tempFile.absolutePath
+                )
+
+                withContext(Dispatchers.Main) {
+                    viewModel.startReadingBook(tempDownloadedBook)
+                    onClose() // Dismiss OnlineReaderScreen loading overlay as we transition to native reader
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            withContext(Dispatchers.Main) {
+                hasError = true
+                errorMessage = e.localizedMessage ?: "Failed to retrieve reference book."
+                isLoading = false
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .background(MaterialTheme.colorScheme.background),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        if (isLoading) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .padding(16.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(100.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            progress = if (downloadProgress >= 0f) downloadProgress else 0f,
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 6.dp,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        if (downloadProgress >= 0f) {
+                            Text(
+                                text = "${(downloadProgress * 100).toInt()}%",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.MenuBook,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Text(
+                        text = stringResource(R.string.loading_online_reader),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    OutlinedButton(
+                        onClick = onClose,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(stringResource(R.string.cancel_btn))
+                    }
+                }
+            }
+        } else if (hasError) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .padding(16.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Download,
-                        contentDescription = "Download"
+                        imageVector = Icons.Default.Error,
+                        contentDescription = "Error icon",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(48.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
                     Text(
-                        text = "Download Reference Book",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        )
+                        text = "Error Loading Book",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error),
+                        textAlign = TextAlign.Center
                     )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = onClose,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(stringResource(R.string.cancel_btn))
+                        }
+                        
+                        Button(
+                            onClick = {
+                                isLoading = true
+                                hasError = false
+                                downloadProgress = 0f
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Retry")
+                        }
+                    }
                 }
             }
         }

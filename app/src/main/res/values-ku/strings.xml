@@ -90,4 +90,12 @@
     <string name="lang_sub">زمانی دڵخوازی ئەپڵیکەیشنەکەت هەڵبژێرە:</string>
     <string name="lang_en">ئینگلیزی (English)</string>
     <string name="lang_ku">کوردی (Kurdish)</string>
+
+    <!-- Read Online Strings -->
+    <string name="read_online">خوێندنەوەی ئۆنلاین</string>
+    <string name="read_offline_btn">خوێندنەوەی ئۆفلاین</string>
+    <string name="download_ref_book">دابەزاندنی پەرتوک</string>
+    <string name="open_in_browser">کردنەوە لە وێبگەڕ</string>
+    <string name="online_reader_title">خوێنەری ئۆنلاین</string>
+    <string name="loading_online_reader">کتێبەکە بە ئۆنلاین باردەکرێت...</string>
 </resources>

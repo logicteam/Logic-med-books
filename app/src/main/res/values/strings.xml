@@ -90,4 +90,12 @@
     <string name="lang_sub">Choose your preferred application language:</string>
     <string name="lang_en">English</string>
     <string name="lang_ku">Kurdish (کوردی)</string>
+
+    <!-- Read Online Strings -->
+    <string name="read_online">Read Online</string>
+    <string name="read_offline_btn">Read Offline</string>
+    <string name="download_ref_book">Download Reference Book</string>
+    <string name="open_in_browser">Open in Browser</string>
+    <string name="online_reader_title">Online Reader</string>
+    <string name="loading_online_reader">Loading book online...</string>
 </resources>
