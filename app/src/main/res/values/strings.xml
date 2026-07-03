@@ -1,3 +1,93 @@
 <resources>
-    <string name="app_name">Logic Med Books</string>
+    <string name="app_name">Logic Med Library</string>
+    <string name="app_name_ku">کتێبخانەی لۆجیک مێد</string>
+    
+    <!-- Tab Titles -->
+    <string name="tab_books">Books</string>
+    <string name="tab_favorites">Favorites</string>
+    <string name="tab_offline">Offline</string>
+    <string name="tab_about">About</string>
+
+    <!-- Search & Filters -->
+    <string name="search_placeholder">Search medical books...</string>
+    <string name="category_all">All</string>
+    <string name="retry_connection">Retry Connection</string>
+    <string name="failed_load_books">Failed to load medical books</string>
+    <string name="no_books_found">No books found matching your criteria.</string>
+
+    <!-- Dialogs & Exit -->
+    <string name="exit_app_title">Exit Application</string>
+    <string name="exit_app_message">Are you sure you want to exit Logic Med Library?</string>
+    <string name="exit_btn">Exit</string>
+    <string name="cancel_btn">Cancel</string>
+    
+    <!-- Detail view -->
+    <string name="close_btn">Close</string>
+    <string name="re_download_btn">Re-download</string>
+    <string name="open_book_btn">Open Book</string>
+    <string name="dismiss_btn">Dismiss</string>
+    <string name="download_book_btn">Download Book</string>
+    <string name="author_label">Author</string>
+    <string name="category_label">Category</string>
+    <string name="language_label">Language</string>
+    <string name="pages_label">Pages</string>
+    <string name="size_label">File Size</string>
+    <string name="no_description">No description available.</string>
+    <string name="remove_offline_btn">Remove from Offline</string>
+    <string name="fav_empty_state">Favorites list is empty</string>
+    <string name="favorites_title">My Favorites</string>
+    <string name="favorites_subtitle">Saved reference books</string>
+    <string name="favorites_empty_title">Your favorites list is empty.</string>
+    <string name="favorites_empty_desc">Tap the heart icon on any book to save it here for offline reference.</string>
+    <string name="offline_empty_state">No offline books downloaded yet.</string>
+    <string name="offline_title">Offline Books</string>
+    <string name="offline_subtitle">Saved reference books for offline study</string>
+    <string name="offline_empty_title">Your offline library is empty.</string>
+    <string name="offline_empty_desc">Download books from the main library to read them offline at any time.</string>
+    <string name="browse_books_btn">Browse Books</string>
+    
+    <!-- PDF Reader -->
+    <string name="loading_offline_pages">Loading Offline Book Pages...</string>
+    <string name="close_pdf_reader">Close PDF Reader</string>
+    <string name="view_bookmarks">View Bookmarks</string>
+    <string name="bookmark_page_desc">Bookmark this page</string>
+    <string name="toggle_theme">Toggle Reading Theme</string>
+    <string name="prev_page">Previous Page</string>
+    <string name="next_page">Next Page</string>
+    <string name="page_counter">Page %1$d of %2$d</string>
+    <string name="rotate_page">Rotate Page</string>
+    <string name="reset_zoom">Reset Zoom</string>
+    <string name="bookmarked_pages">Bookmarked Pages</string>
+    <string name="bookmarks_empty_desc">You haven\'t bookmarked any pages yet. Click the bookmark icon in the top bar to save pages.</string>
+    <string name="delete_bookmark">Delete bookmark</string>
+    <string name="failed_render_page">Failed to render PDF page</string>
+    <string name="failed_open_pdf">Could not open offline PDF</string>
+
+    <!-- About Tab -->
+    <string name="app_theme">App Theme</string>
+    <string name="theme_sub">Choose your preferred visual presentation style:</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_style_title">Color Palette</string>
+    <string name="theme_style_sub">Select a custom color palette for the app:</string>
+    <string name="theme_style_purple">Purple</string>
+    <string name="theme_style_blue">Blue</string>
+    <string name="theme_style_green">Green</string>
+    <string name="theme_style_orange">Orange</string>
+    <string name="theme_style_red">Red</string>
+    <string name="about_title">About the App</string>
+    <string name="about_desc">Logic Med Library is a modern clinical reference library tailored for Medical Laboratory Professionals and students. It fetches a curated index of clinical, biology, hematology, and laboratory reference books dynamically from our online database, offering immediate direct access to vital academic resources.</string>
+    <string name="academic_background_title">Academic Background</string>
+    <string name="academic_background_desc">Graduated from Shaqlawa Technical College, Medical Laboratory Technology department.</string>
+    <string name="contact_developer">Contact: logicgram2019@gmail.com</string>
+    <string name="email_client_error">No email client found.</string>
+    <string name="removed_from_offline">removed from offline books.</string>
+    <string name="permission_denied_storage">Permission Denied: Cannot save download without storage access.</string>
+    
+    <!-- Language Settings -->
+    <string name="app_language">App Language</string>
+    <string name="lang_sub">Choose your preferred application language:</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ku">Kurdish (کوردی)</string>
 </resources>

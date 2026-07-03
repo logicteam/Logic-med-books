@@ -1,0 +1,93 @@
+<resources>
+    <string name="app_name">کتێبخانەی لۆجیک مێد</string>
+    <string name="app_name_ku">کتێبخانەی لۆجیک مێد</string>
+    
+    <!-- Tab Titles -->
+    <string name="tab_books">کتێبەکان</string>
+    <string name="tab_favorites">دڵخوازەکان</string>
+    <string name="tab_offline">ئۆفلاین</string>
+    <string name="tab_about">دەربارە</string>
+
+    <!-- Search & Filters -->
+    <string name="search_placeholder">گەڕان بۆ کتێبی پزیشکی...</string>
+    <string name="category_all">هەموو</string>
+    <string name="retry_connection">دووبارە هەوڵبدەرەوە</string>
+    <string name="failed_load_books">بارکردنی کتێبە پزیشکییەکان سەرکەوتوو نەبوو</string>
+    <string name="no_books_found">هیچ کتێبێک نەدۆزرایەوە کە لەگەڵ گەڕانەکەت بگونجێت.</string>
+
+    <!-- Dialogs & Exit -->
+    <string name="exit_app_title">داخستنی ئەپڵیکەیشن</string>
+    <string name="exit_app_message">دڵنیای لە داخستنی کتێبخانەی لۆجیک مێد؟</string>
+    <string name="exit_btn">داخستن</string>
+    <string name="cancel_btn">پەشیمانبوونەوە</string>
+    
+    <!-- Detail view -->
+    <string name="close_btn">داخستن</string>
+    <string name="re_download_btn">داگرتنەوە</string>
+    <string name="open_book_btn">کردنەوەی کتێب</string>
+    <string name="dismiss_btn">لادان</string>
+    <string name="download_book_btn">داگرتنی کتێب</string>
+    <string name="author_label">نووسەر</string>
+    <string name="category_label">پۆلێن</string>
+    <string name="language_label">زمان</string>
+    <string name="pages_label">لاپەڕەکان</string>
+    <string name="size_label">قەبارەی فایل</string>
+    <string name="no_description">هیچ وەسفێک بەردەست نییە.</string>
+    <string name="remove_offline_btn">سڕینەوە لە ئۆفلاین</string>
+    <string name="fav_empty_state">لیستی دڵخوازەکان بەتاڵە</string>
+    <string name="favorites_title">دڵخوازەکانم</string>
+    <string name="favorites_subtitle">کتێبە سەرچاوە پاشەکەوتکراوەکان</string>
+    <string name="favorites_empty_title">لیستی دڵخوازەکانت بەتاڵە.</string>
+    <string name="favorites_empty_desc">کلیک لەسەر ئایکۆنی دڵ بکە لەسەر هەر کتێبێک بۆ پاشەکەوتکردنی لێرە.</string>
+    <string name="offline_empty_state">هیچ کتێبێکی دابەزێنراو بۆ خوێندنەوەی ئۆفلاین نییە.</string>
+    <string name="offline_title">کتێبەکانی ئۆفلاین</string>
+    <string name="offline_subtitle">کتێبە سەرچاوە دابەزێنراوەکان بۆ خوێندنەوەی ئۆفلاین</string>
+    <string name="offline_empty_title">کتێبخانەی ئۆفلاینەکەت بەتاڵە.</string>
+    <string name="offline_empty_desc">کتێبەکان لە کتێبخانەی سەرەکی داگرە بۆ ئەوەی لە هەر کاتێکدا بە شێوازی ئۆفلاین بیخوێنیتەوە.</string>
+    <string name="browse_books_btn">گەڕان بەدوای کتێبەکاندا</string>
+    
+    <!-- PDF Reader -->
+    <string name="loading_offline_pages">بارکردنی لاپەڕەکانی کتێبی ئۆفلاین...</string>
+    <string name="close_pdf_reader">داخستنی خوێنەری PDF</string>
+    <string name="view_bookmarks">بینینی نیشانەکراوەکان</string>
+    <string name="bookmark_page_desc">نیشانەکردنی ئەم لاپەڕەیە</string>
+    <string name="toggle_theme">گۆڕینی ڕەنگی خوێندنەوە</string>
+    <string name="prev_page">لاپەڕەی پێشوو</string>
+    <string name="next_page">لاپەڕەی داهاتوو</string>
+    <string name="page_counter">لاپەڕەی %1$d لە %2$d</string>
+    <string name="rotate_page">خولاندنەوەی لاپەڕە</string>
+    <string name="reset_zoom">سەرلەنوێ ڕێکخستنەوەی زووم</string>
+    <string name="bookmarked_pages">لاپەڕە نیشانەکراوەکان</string>
+    <string name="bookmarks_empty_desc">تا ئێستا هیچ لاپەڕەیەکت نیشانە نەکردووە. کلیک لەسەر ئایکۆنی نیشانەکردن بکە لە بەشی سەرەوە بۆ پاشکەوتکردنی لاپەڕەکان.</string>
+    <string name="delete_bookmark">سڕینەوەی نیشانەکراو</string>
+    <string name="failed_render_page">ڕەندەرکردنی لاپەڕەی PDF سەرکەوتوو نەبوو</string>
+    <string name="failed_open_pdf">نەتوانرا کتێبی ئۆفلاین بکرێتەوە</string>
+
+    <!-- About Tab -->
+    <string name="app_theme">ڕوکاری ئەپ</string>
+    <string name="theme_sub">شێوازی پیشاندانی بینراوی دڵخوازی خۆت هەڵبژێرە:</string>
+    <string name="theme_system">سیستەم</string>
+    <string name="theme_light">ڕووناک</string>
+    <string name="theme_dark">تاریك</string>
+    <string name="theme_style_title">پالێتی ڕەنگ</string>
+    <string name="theme_style_sub">پالێتێکی ڕەنگی تایبەت بۆ ئەپەکە هەڵبژێرە:</string>
+    <string name="theme_style_purple">مۆر</string>
+    <string name="theme_style_blue">شین</string>
+    <string name="theme_style_green">سەوز</string>
+    <string name="theme_style_orange">پرتەقاڵی</string>
+    <string name="theme_style_red">سوور</string>
+    <string name="about_title">دەربارەی ئەپ</string>
+    <string name="about_desc">کتێبخانەی لۆجیک مێد کتێبخانەیەکی سەرچاوەی پزیشکی مۆدێرنە کە تایبەتە بە خوێندکاران و پسپۆڕانی تاقیگەی پزیشکی. ئەم ئەپە بە شێوەیەکی داینامیکی نوێترین کتێبەکانی تاقیگەی کلینیکی، بایۆلۆجی، هیماتۆلۆجی لە بنکەی زانیاری ئۆنلاینمانەوە دەهێنێت و دەستڕاگەیشتنی ڕاستەوخۆ بە سەرچاوە زانستییە گرنگەکان دابین دەکات.</string>
+    <string name="academic_background_title">پاشخانی ئەکادیمی</string>
+    <string name="academic_background_desc">دەرچووی کۆلێژی تەکنیکی شەقڵاوە، بەشی تەکنەلۆجیای تاقیگەی پزیشکی.</string>
+    <string name="contact_developer">پەیوەندی: logicgram2019@gmail.com</string>
+    <string name="email_client_error">هیچ ئەپێکی ئیمەیڵ نەدۆزرایەوە.</string>
+    <string name="removed_from_offline">لە کتێبەکانی ئۆفلاین سڕایەوە.</string>
+    <string name="permission_denied_storage">ڕەتکرایەوە: ناتوانرێت داگرتنەکە پاشکەوت بکرێت بەبێ دەستڕاگەیشتن بە بیرگەی مۆبایلەکە.</string>
+    
+    <!-- Language Settings -->
+    <string name="app_language">زمانی ئەپ</string>
+    <string name="lang_sub">زمانی دڵخوازی ئەپڵیکەیشنەکەت هەڵبژێرە:</string>
+    <string name="lang_en">ئینگلیزی (English)</string>
+    <string name="lang_ku">کوردی (Kurdish)</string>
+</resources>

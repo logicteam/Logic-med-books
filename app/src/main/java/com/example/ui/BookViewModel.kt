@@ -99,6 +99,20 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     
     val isGridView = MutableStateFlow(prefs.getBoolean("is_grid_view", true))
 
+    val languageCode = MutableStateFlow(prefs.getString("language_code", "en") ?: "en")
+
+    val selectedThemeStyle = MutableStateFlow(prefs.getString("theme_style", "purple") ?: "purple")
+
+    fun setThemeStyle(style: String) {
+        selectedThemeStyle.value = style
+        prefs.edit().putString("theme_style", style).apply()
+    }
+
+    fun setLanguage(code: String) {
+        languageCode.value = code
+        prefs.edit().putString("language_code", code).apply()
+    }
+
     fun toggleLayoutMode() {
         val nextVal = !isGridView.value
         isGridView.value = nextVal

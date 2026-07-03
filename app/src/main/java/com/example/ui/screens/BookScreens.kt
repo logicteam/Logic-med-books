@@ -38,7 +38,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -110,13 +112,13 @@ fun BookAppContent(
             onDismissRequest = { showExitDialog = false },
             title = {
                 Text(
-                    text = "Exit Application",
+                    text = stringResource(R.string.exit_app_title),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
             },
             text = {
                 Text(
-                    text = "Are you sure you want to exit Logic Med Books?",
+                    text = stringResource(R.string.exit_app_message),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -131,7 +133,7 @@ fun BookAppContent(
                     ),
                     modifier = Modifier.testTag("exit_confirm_btn")
                 ) {
-                    Text("Exit", color = MaterialTheme.colorScheme.onError)
+                    Text(stringResource(R.string.exit_btn), color = MaterialTheme.colorScheme.onError)
                 }
             },
             dismissButton = {
@@ -139,7 +141,7 @@ fun BookAppContent(
                     onClick = { showExitDialog = false },
                     modifier = Modifier.testTag("exit_cancel_btn")
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel_btn))
                 }
             },
             modifier = Modifier.testTag("exit_dialog")
@@ -257,7 +259,7 @@ fun BooksFeedTab(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Logic Med Books",
+                    text = "Logic Med Library",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -320,7 +322,7 @@ fun BooksFeedTab(
             onValueChange = { viewModel.searchQuery.value = it },
             placeholder = {
                 Text(
-                    text = "Search Title or Author...",
+                    text = stringResource(R.string.search_placeholder),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
@@ -381,7 +383,7 @@ fun BooksFeedTab(
                     modifier = Modifier.testTag("category_chip_$category")
                 ) {
                     Text(
-                        text = category,
+                        text = if (category.equals("All", ignoreCase = true)) stringResource(R.string.category_all) else category,
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Medium
                         ),
@@ -437,7 +439,7 @@ fun BooksFeedTab(
                             onClick = { viewModel.fetchBooks() },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
-                            Text("Retry Connection")
+                            Text(stringResource(R.string.retry_connection))
                         }
                     }
                 }
@@ -457,7 +459,7 @@ fun BooksFeedTab(
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
                             Text(
-                                text = "No books match your criteria.",
+                                text = stringResource(R.string.no_books_found),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -524,7 +526,7 @@ fun FavoritesTab(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "My Favorites",
+                    text = stringResource(R.string.favorites_title),
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -532,7 +534,7 @@ fun FavoritesTab(
                     )
                 )
                 Text(
-                    text = "Saved reference books",
+                    text = stringResource(R.string.favorites_subtitle),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -581,7 +583,7 @@ fun FavoritesTab(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
-                        text = "Your favorites list is empty.",
+                        text = stringResource(R.string.favorites_empty_title),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -589,7 +591,7 @@ fun FavoritesTab(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Tap the heart icon on any book to save it here for offline reference.",
+                        text = stringResource(R.string.favorites_empty_desc),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
@@ -1164,25 +1166,22 @@ fun AboutTab(viewModel: BookViewModel) {
             Box(
                 modifier = Modifier
                     .size(80.dp)
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                MaterialTheme.colorScheme.primary
-                            )
-                        ),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+                    .clip(RoundedCornerShape(18.dp))
             ) {
-                Text(
-                    text = "🔬",
-                    fontSize = 40.sp
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_background),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize()
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                    contentDescription = "App Icon",
+                    modifier = Modifier.fillMaxSize()
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Logic Med Books",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -1207,7 +1206,7 @@ fun AboutTab(viewModel: BookViewModel) {
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    text = "App Theme",
+                    text = stringResource(R.string.app_theme),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -1215,7 +1214,7 @@ fun AboutTab(viewModel: BookViewModel) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Choose your preferred visual presentation style:",
+                    text = stringResource(R.string.theme_sub),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1227,9 +1226,9 @@ fun AboutTab(viewModel: BookViewModel) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val states = listOf(
-                        Triple(null, "System", Icons.Default.BrightnessAuto),
-                        Triple(false, "Light", Icons.Default.LightMode),
-                        Triple(true, "Dark", Icons.Default.DarkMode)
+                        Triple(null, stringResource(R.string.theme_system), Icons.Default.BrightnessAuto),
+                        Triple(false, stringResource(R.string.theme_light), Icons.Default.LightMode),
+                        Triple(true, stringResource(R.string.theme_dark), Icons.Default.DarkMode)
                     )
 
                     states.forEach { (value, label, icon) ->
@@ -1253,7 +1252,7 @@ fun AboutTab(viewModel: BookViewModel) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
-                            ) {
+                             ) {
                                 Icon(
                                     imageVector = icon,
                                     contentDescription = label,
@@ -1277,6 +1276,158 @@ fun AboutTab(viewModel: BookViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Color Palette Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = stringResource(R.string.theme_style_title),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.theme_style_sub),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val currentThemeStyle by viewModel.selectedThemeStyle.collectAsState()
+
+                val styleOptions = listOf(
+                    Triple("purple", stringResource(R.string.theme_style_purple), Color(0xFF6750A4)),
+                    Triple("blue", stringResource(R.string.theme_style_blue), Color(0xFF0061A4)),
+                    Triple("green", stringResource(R.string.theme_style_green), Color(0xFF006D40)),
+                    Triple("orange", stringResource(R.string.theme_style_orange), Color(0xFF8B5000)),
+                    Triple("red", stringResource(R.string.theme_style_red), Color(0xFFBA1A1A))
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    styleOptions.forEach { (styleKey, styleLabel, styleColor) ->
+                        val isSelected = currentThemeStyle == styleKey
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                                .clickable { viewModel.setThemeStyle(styleKey) }
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .testTag("theme_style_btn_$styleKey"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .background(styleColor, shape = CircleShape)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = styleLabel,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Language Select Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = stringResource(R.string.app_language),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.lang_sub),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val currentLang by viewModel.languageCode.collectAsState()
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val languages = listOf(
+                        "en" to stringResource(R.string.lang_en),
+                        "ku" to stringResource(R.string.lang_ku)
+                    )
+
+                    languages.forEach { (code, label) ->
+                        val isSelected = currentLang == code
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                                .clickable { viewModel.setLanguage(code) }
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .testTag("lang_btn_$code"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // App Mission Card
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -1286,7 +1437,7 @@ fun AboutTab(viewModel: BookViewModel) {
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    text = "About the App",
+                    text = stringResource(R.string.about_title),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -1294,7 +1445,7 @@ fun AboutTab(viewModel: BookViewModel) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Logic Med Books is a modern clinical reference library tailored for Medical Laboratory Professionals and students. It fetches a curated index of clinical, biology, hematology, and laboratory reference books dynamically from our online database, offering immediate direct access to vital academic resources.",
+                    text = stringResource(R.string.about_desc),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         lineHeight = 22.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -1349,7 +1500,7 @@ fun AboutTab(viewModel: BookViewModel) {
 
                 // Academic Information Section
                 Text(
-                    text = "Academic Background",
+                    text = stringResource(R.string.academic_background_title),
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -1357,7 +1508,7 @@ fun AboutTab(viewModel: BookViewModel) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Graduated from Shaqlawa Technical College, Medical Laboratory Technology department.",
+                    text = stringResource(R.string.academic_background_desc),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
@@ -1370,12 +1521,12 @@ fun AboutTab(viewModel: BookViewModel) {
                     onClick = {
                         val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
                             data = Uri.parse("mailto:logicgram2019@gmail.com")
-                            putExtra(Intent.EXTRA_SUBJECT, "Inquiry about Logic Med Books")
+                            putExtra(Intent.EXTRA_SUBJECT, "Inquiry about Logic Med Library")
                         }
                         try {
                             context.startActivity(emailIntent)
                         } catch (e: Exception) {
-                            Toast.makeText(context, "No email client found.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.email_client_error), Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier
@@ -1390,7 +1541,7 @@ fun AboutTab(viewModel: BookViewModel) {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Contact: logicgram2019@gmail.com",
+                        text = stringResource(R.string.contact_developer),
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Bold
                         )
@@ -1417,12 +1568,12 @@ fun GeometricBottomNav(
             icon = {
                 Icon(
                     imageVector = if (currentTab == "books") Icons.AutoMirrored.Filled.MenuBook else Icons.AutoMirrored.Outlined.MenuBook,
-                    contentDescription = "Books Feed"
+                    contentDescription = stringResource(R.string.tab_books)
                 )
             },
             label = {
                 Text(
-                    text = "Books",
+                    text = stringResource(R.string.tab_books),
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = if (currentTab == "books") FontWeight.Bold else FontWeight.Normal
                     )
@@ -1437,12 +1588,12 @@ fun GeometricBottomNav(
             icon = {
                 Icon(
                     imageVector = if (currentTab == "favorites") Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = "Favorites list"
+                    contentDescription = stringResource(R.string.tab_favorites)
                 )
             },
             label = {
                 Text(
-                    text = "Favorites",
+                    text = stringResource(R.string.tab_favorites),
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = if (currentTab == "favorites") FontWeight.Bold else FontWeight.Normal
                     )
@@ -1457,12 +1608,12 @@ fun GeometricBottomNav(
             icon = {
                 Icon(
                     imageVector = if (currentTab == "offline") Icons.Default.CloudDownload else Icons.Default.CloudDownload,
-                    contentDescription = "Offline library"
+                    contentDescription = stringResource(R.string.tab_offline)
                 )
             },
             label = {
                 Text(
-                    text = "Offline",
+                    text = stringResource(R.string.tab_offline),
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = if (currentTab == "offline") FontWeight.Bold else FontWeight.Normal
                     )
@@ -1477,12 +1628,12 @@ fun GeometricBottomNav(
             icon = {
                 Icon(
                     imageVector = if (currentTab == "about") Icons.Filled.Info else Icons.Outlined.Info,
-                    contentDescription = "About Developer"
+                    contentDescription = stringResource(R.string.tab_about)
                 )
             },
             label = {
                 Text(
-                    text = "About",
+                    text = stringResource(R.string.tab_about),
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = if (currentTab == "about") FontWeight.Bold else FontWeight.Normal
                     )
@@ -1677,7 +1828,7 @@ fun OfflineTab(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Offline Books",
+                    text = stringResource(R.string.offline_title),
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -1685,7 +1836,7 @@ fun OfflineTab(
                     )
                 )
                 Text(
-                    text = "Saved reference books for offline study",
+                    text = stringResource(R.string.offline_subtitle),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1734,7 +1885,7 @@ fun OfflineTab(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
-                        text = "Your offline library is empty.",
+                        text = stringResource(R.string.offline_empty_title),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -1742,7 +1893,7 @@ fun OfflineTab(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Download books from the main library to read them offline at any time.",
+                        text = stringResource(R.string.offline_empty_desc),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
@@ -1753,9 +1904,9 @@ fun OfflineTab(
                         onClick = onNavigateToFeed,
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = "Browse Books")
+                        Icon(imageVector = Icons.Default.Search, contentDescription = stringResource(R.string.browse_books_btn))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Browse Books")
+                        Text(stringResource(R.string.browse_books_btn))
                     }
                 }
             } else {

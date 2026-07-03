@@ -1,5 +1,5 @@
 {
-  "name": "Logic Med Books",
+  "name": "Logic Med Library",
   "description": "An online book library application fetching medical reference books dynamically.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
