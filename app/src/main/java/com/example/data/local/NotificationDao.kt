@@ -23,6 +23,9 @@ interface NotificationDao {
     @Query("DELETE FROM notifications WHERE id = :id")
     suspend fun deleteNotification(id: Int)
 
+    @Query("DELETE FROM notifications WHERE title IN ('Welcome to Logic Med Library', 'Offline Study Feature Enabled', 'New Medical Books Added')")
+    suspend fun deleteDefaultNotifications()
+
     @Query("DELETE FROM notifications")
     suspend fun clearAllNotifications()
 

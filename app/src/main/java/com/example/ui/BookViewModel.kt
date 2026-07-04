@@ -231,7 +231,49 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         initialValue = emptyList()
     )
 
+    val fcmToken = MutableStateFlow<String>("Retrieving...")
+
     init {
+        // Initialize FCM Token and Topic Subscription
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    fcmToken.value = "Failed to retrieve token"
+                    android.util.Log.e("BookViewModel", "Fetching FCM registration token failed", task.exception)
+                    return@addOnCompleteListener
+                }
+                val token = task.result
+                fcmToken.value = token ?: "No token found"
+                android.util.Log.d("BookViewModel", "FCM Token: $token")
+            }
+
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("all")
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        android.util.Log.d("BookViewModel", "Subscribed to 'all' topic successfully!")
+                    } else {
+                        android.util.Log.e("BookViewModel", "Failed to subscribe to 'all' topic", task.exception)
+                    }
+                }
+            
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("updates")
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        android.util.Log.d("BookViewModel", "Subscribed to 'updates' topic successfully!")
+                    }
+                }
+
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("Logic")
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        android.util.Log.d("BookViewModel", "Subscribed to 'Logic' topic successfully!")
+                    }
+                }
+        } catch (e: Exception) {
+            fcmToken.value = "Firebase initialization error"
+            android.util.Log.e("BookViewModel", "Firebase Messaging not initialized", e)
+        }
+
         viewModelScope.launch {
             isDarkThemeOverride.collect { override ->
                 val strValue = when (override) {
@@ -244,30 +286,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         }
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val existing = repository.allNotifications.first()
-                if (existing.isEmpty()) {
-                    repository.addNotification(
-                        Notification(
-                            title = "Welcome to Logic Med Library",
-                            message = "Explore the latest reference books for hematology, biochemistry, and microbiology right in your pocket.",
-                            category = "System"
-                        )
-                    )
-                    repository.addNotification(
-                        Notification(
-                            title = "Offline Study Feature Enabled",
-                            message = "You can now download reference books and read them offline at any time without internet access.",
-                            category = "Tutorial"
-                        )
-                    )
-                    repository.addNotification(
-                        Notification(
-                            title = "New Medical Books Added",
-                            message = "Check out the latest Clinical Immunology and Molecular Pathology additions in the main catalog.",
-                            category = "Updates"
-                        )
-                    )
-                }
+                repository.deleteDefaultNotifications()
             } catch (e: Exception) {
                 e.printStackTrace()
             }

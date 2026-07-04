@@ -35,6 +35,10 @@ class BookRepository(context: Context) {
         notificationDao.deleteNotification(id)
     }
 
+    suspend fun deleteDefaultNotifications() {
+        notificationDao.deleteDefaultNotifications()
+    }
+
     suspend fun clearAllNotifications() {
         notificationDao.clearAllNotifications()
     }
