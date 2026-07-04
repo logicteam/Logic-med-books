@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "763737929990",
+    "project_id": "logicmed",
+    "storage_bucket": "logicmed.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:763737929990:android:fdfd24d7fca56568198687",
+        "android_client_info": {
+          "package_name": "com.logicmedbooks"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXVacU54KIhX0agDuN_LpzfufhBxFAhMg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

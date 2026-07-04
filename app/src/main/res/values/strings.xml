@@ -98,4 +98,15 @@
     <string name="open_in_browser">Open in Browser</string>
     <string name="online_reader_title">Online Reader</string>
     <string name="loading_online_reader">Loading book online...</string>
+
+    <!-- Notification Strings -->
+    <string name="tab_notifications">Notifications</string>
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_subtitle">Stay updated with important announcements</string>
+    <string name="notifications_empty_title">Your Inbox is Empty</string>
+    <string name="notifications_empty_desc">You will receive announcements, system alerts, and book update notifications here.</string>
+    <string name="clear_all">Clear All</string>
+    <string name="mark_as_read">Mark as Read</string>
+    <string name="mark_all_read">Mark All Read</string>
+    <string name="notification_deleted">Notification deleted</string>
 </resources>

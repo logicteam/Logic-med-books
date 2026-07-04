@@ -89,6 +89,7 @@ fun BookAppContent(
     var selectedBook by remember { mutableStateOf<Book?>(null) }
     var onlineReadingBook by remember { mutableStateOf<Book?>(null) }
     var showExitDialog by remember { mutableStateOf(false) }
+    var showNotifications by remember { mutableStateOf(false) }
 
     fun findActivity(ctx: android.content.Context): Activity? {
         var currentContext = ctx
@@ -112,7 +113,11 @@ fun BookAppContent(
         selectedBook = null
     }
 
-    BackHandler(enabled = currentReadingBook == null && onlineReadingBook == null && selectedBook == null) {
+    BackHandler(enabled = currentReadingBook == null && onlineReadingBook == null && selectedBook == null && showNotifications) {
+        showNotifications = false
+    }
+
+    BackHandler(enabled = currentReadingBook == null && onlineReadingBook == null && selectedBook == null && !showNotifications) {
         showExitDialog = true
     }
 
@@ -183,7 +188,7 @@ fun BookAppContent(
             } else {
                 Scaffold(
                     bottomBar = {
-                        if (selectedBook == null) {
+                        if (selectedBook == null && !showNotifications) {
                             GeometricBottomNav(
                                 currentTab = currentTab,
                                 onTabSelected = { currentTab = it }
@@ -199,40 +204,50 @@ fun BookAppContent(
                             .padding(innerPadding)
                     ) {
                         AnimatedContent(
-                            targetState = selectedBook != null,
+                            targetState = if (showNotifications) "notifications" else if (selectedBook != null) "detail" else "tabs",
                             transitionSpec = {
                                 slideInHorizontally { width -> width } + fadeIn() togetherWith
                                         slideOutHorizontally { width -> -width } + fadeOut()
                             },
                             label = "ScreenTransition"
-                        ) { isDetailOpen ->
-                            if (isDetailOpen) {
-                                selectedBook?.let { book ->
-                                    BookDetailScreen(
-                                        book = book,
+                        ) { screenState ->
+                            when (screenState) {
+                                "notifications" -> {
+                                    NotificationsScreen(
                                         viewModel = viewModel,
-                                        onBack = { selectedBook = null },
-                                        onReadOnline = { onlineReadingBook = book }
+                                        onBack = { showNotifications = false }
                                     )
                                 }
-                            } else {
-                                Crossfade(targetState = currentTab, label = "TabTransition") { tab ->
-                                    when (tab) {
-                                        "books" -> BooksFeedTab(
+                                "detail" -> {
+                                    selectedBook?.let { book ->
+                                        BookDetailScreen(
+                                            book = book,
                                             viewModel = viewModel,
-                                            onBookSelected = { selectedBook = it },
-                                            onOpenAbout = { currentTab = "about" }
+                                            onBack = { selectedBook = null },
+                                            onReadOnline = { onlineReadingBook = book }
                                         )
-                                        "favorites" -> FavoritesTab(
-                                            viewModel = viewModel,
-                                            onBookSelected = { selectedBook = it }
-                                        )
-                                        "offline" -> OfflineTab(
-                                            viewModel = viewModel,
-                                            onBookSelected = { selectedBook = it },
-                                            onNavigateToFeed = { currentTab = "books" }
-                                        )
-                                        "about" -> AboutTab(viewModel = viewModel)
+                                    }
+                                }
+                                "tabs" -> {
+                                    Crossfade(targetState = currentTab, label = "TabTransition") { tab ->
+                                        when (tab) {
+                                            "books" -> BooksFeedTab(
+                                                viewModel = viewModel,
+                                                onBookSelected = { selectedBook = it },
+                                                onOpenAbout = { currentTab = "about" },
+                                                onOpenNotifications = { showNotifications = true }
+                                            )
+                                            "favorites" -> FavoritesTab(
+                                                viewModel = viewModel,
+                                                onBookSelected = { selectedBook = it }
+                                            )
+                                            "offline" -> OfflineTab(
+                                                viewModel = viewModel,
+                                                onBookSelected = { selectedBook = it },
+                                                onNavigateToFeed = { currentTab = "books" }
+                                            )
+                                            "about" -> AboutTab(viewModel = viewModel)
+                                        }
                                     }
                                 }
                             }
@@ -251,7 +266,8 @@ fun BookAppContent(
 fun BooksFeedTab(
     viewModel: BookViewModel,
     onBookSelected: (Book) -> Unit,
-    onOpenAbout: () -> Unit
+    onOpenAbout: () -> Unit,
+    onOpenNotifications: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val filteredBooks by viewModel.filteredBooks.collectAsState()
@@ -308,29 +324,39 @@ fun BooksFeedTab(
                     )
                 }
 
-                // Theme Toggle Icon Button
+                // Notification Bell Icon Button with dynamic unread badge count!
+                val unreadCount by viewModel.unreadNotificationsCount.collectAsState()
                 IconButton(
-                    onClick = {
-                        viewModel.isDarkThemeOverride.value = when (isDarkThemeOverride) {
-                            null -> false
-                            false -> true
-                            true -> null
-                        }
-                    },
-                    modifier = Modifier.testTag("theme_toggle_feed")
+                    onClick = onOpenNotifications,
+                    modifier = Modifier.testTag("notifications_bell_feed")
                 ) {
-                    Icon(
-                        imageVector = when (isDarkThemeOverride) {
-                            null -> Icons.Default.BrightnessAuto
-                            false -> Icons.Default.LightMode
-                            true -> Icons.Default.DarkMode
-                        },
-                        contentDescription = "Toggle theme",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Box {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = stringResource(R.string.tab_notifications),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        if (unreadCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 4.dp, y = (-4).dp)
+                                    .background(MaterialTheme.colorScheme.error, CircleShape)
+                                    .size(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (unreadCount > 9) "9+" else unreadCount.toString(),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onError
+                                    )
+                                )
+                            }
+                        }
+                    }
                 }
-
-
             }
         }
 
@@ -556,27 +582,6 @@ fun FavoritesTab(
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                )
-            }
-
-            IconButton(
-                onClick = {
-                    viewModel.isDarkThemeOverride.value = when (isDarkThemeOverride) {
-                        null -> false
-                        false -> true
-                        true -> null
-                    }
-                },
-                modifier = Modifier.testTag("theme_toggle_favorites")
-            ) {
-                Icon(
-                    imageVector = when (isDarkThemeOverride) {
-                        null -> Icons.Default.BrightnessAuto
-                        false -> Icons.Default.LightMode
-                        true -> Icons.Default.DarkMode
-                    },
-                    contentDescription = "Toggle theme",
-                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -2205,27 +2210,6 @@ fun OfflineTab(
                     )
                 )
             }
-
-            IconButton(
-                onClick = {
-                    viewModel.isDarkThemeOverride.value = when (isDarkThemeOverride) {
-                        null -> false
-                        false -> true
-                        true -> null
-                    }
-                },
-                modifier = Modifier.testTag("theme_toggle_offline")
-            ) {
-                Icon(
-                    imageVector = when (isDarkThemeOverride) {
-                        null -> Icons.Default.BrightnessAuto
-                        false -> Icons.Default.LightMode
-                        true -> Icons.Default.DarkMode
-                    },
-                    contentDescription = "Toggle theme",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
         }
 
         Box(
@@ -3023,5 +3007,313 @@ fun PdfReaderScreen(
                 }
             }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NotificationsScreen(
+    viewModel: BookViewModel,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val notifications by viewModel.notifications.collectAsState()
+    val context = LocalContext.current
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.notifications_title),
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            text = stringResource(R.string.notifications_subtitle),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.testTag("notifications_back_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    if (notifications.isNotEmpty()) {
+                        IconButton(
+                            onClick = { viewModel.markAllNotificationsAsRead() },
+                            modifier = Modifier.testTag("notifications_mark_all_read")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = stringResource(R.string.mark_all_read),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        IconButton(
+                            onClick = { viewModel.clearAllNotifications() },
+                            modifier = Modifier.testTag("notifications_clear_all")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.clear_all),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        modifier = modifier.fillMaxSize()
+    ) { innerPadding ->
+        if (notifications.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = stringResource(R.string.notifications_empty_title),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.notifications_empty_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.widthIn(max = 320.dp)
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(notifications, key = { it.id }) { item ->
+                    NotificationCard(
+                        notification = item,
+                        onMarkAsRead = { viewModel.markNotificationAsRead(item.id) },
+                        onDelete = {
+                            viewModel.deleteNotification(item.id)
+                            Toast.makeText(context, context.getString(R.string.notification_deleted), Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NotificationCard(
+    notification: com.example.data.local.Notification,
+    onMarkAsRead: () -> Unit,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isRead = notification.isRead
+    val cardColor = if (isRead) {
+        MaterialTheme.colorScheme.surface
+    } else {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+    }
+    val borderColor = if (isRead) {
+        MaterialTheme.colorScheme.outlineVariant
+    } else {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+    }
+
+    val timeString = remember(notification.timestamp) {
+        val sdf = java.text.SimpleDateFormat("MMM dd, yyyy - hh:mm a", java.util.Locale.getDefault())
+        sdf.format(java.util.Date(notification.timestamp))
+    }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("notification_card_${notification.id}"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        border = BorderStroke(1.dp, borderColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Unread indicator or category icon
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        color = if (isRead) {
+                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                        } else {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                        },
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = when (notification.category.lowercase()) {
+                        "system" -> Icons.Default.Settings
+                        "updates" -> Icons.Default.Refresh
+                        "tutorial" -> Icons.AutoMirrored.Filled.MenuBook
+                        else -> Icons.Default.Notifications
+                    },
+                    contentDescription = notification.category,
+                    modifier = Modifier.size(20.dp),
+                    tint = if (isRead) {
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+                )
+            }
+
+            // Notification content
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Category Badge
+                    Surface(
+                        color = when (notification.category.lowercase()) {
+                            "system" -> MaterialTheme.colorScheme.tertiaryContainer
+                            "updates" -> MaterialTheme.colorScheme.errorContainer
+                            "tutorial" -> MaterialTheme.colorScheme.secondaryContainer
+                            else -> MaterialTheme.colorScheme.primaryContainer
+                        },
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = notification.category,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            color = when (notification.category.lowercase()) {
+                                "system" -> MaterialTheme.colorScheme.onTertiaryContainer
+                                "updates" -> MaterialTheme.colorScheme.onErrorContainer
+                                "tutorial" -> MaterialTheme.colorScheme.onSecondaryContainer
+                                else -> MaterialTheme.colorScheme.onPrimaryContainer
+                            }
+                        )
+                    }
+
+                    // Timestamp
+                    Text(
+                        text = timeString,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Title
+                Text(
+                    text = notification.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = if (isRead) FontWeight.Medium else FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Message
+                Text(
+                    text = notification.message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                if (!isRead) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    TextButton(
+                        onClick = onMarkAsRead,
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .testTag("mark_read_btn_${notification.id}"),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.mark_as_read),
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
+                }
+            }
+
+            // Individual Delete Button
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier
+                    .align(Alignment.Top)
+                    .size(32.dp)
+                    .testTag("delete_notification_btn_${notification.id}")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Delete",
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
+        }
     }
 }

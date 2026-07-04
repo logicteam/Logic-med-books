@@ -7,12 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.Book
 import com.example.data.BookRepository
 import com.example.data.local.DownloadedBook
+import com.example.data.local.Notification
 import com.example.util.SecurityUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -152,6 +154,56 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
             initialValue = emptyList()
         )
 
+    val notifications: StateFlow<List<Notification>> = repository.allNotifications
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    val unreadNotificationsCount: StateFlow<Int> = repository.unreadNotificationsCount
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
+
+    fun markNotificationAsRead(id: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.markNotificationAsRead(id)
+        }
+    }
+
+    fun markAllNotificationsAsRead() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.markAllNotificationsAsRead()
+        }
+    }
+
+    fun deleteNotification(id: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteNotificationById(id)
+        }
+    }
+
+    fun clearAllNotifications() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.clearAllNotifications()
+        }
+    }
+
+    fun addNotification(title: String, message: String, category: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.addNotification(
+                Notification(
+                    title = title,
+                    message = message,
+                    category = category
+                )
+            )
+        }
+    }
+
     fun removeDownloadedBookByTitle(title: String) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.removeDownloadedBookByTitle(title)
@@ -188,6 +240,36 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                     else -> "system"
                 }
                 prefs.edit().putString("theme_override", strValue).apply()
+            }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val existing = repository.allNotifications.first()
+                if (existing.isEmpty()) {
+                    repository.addNotification(
+                        Notification(
+                            title = "Welcome to Logic Med Library",
+                            message = "Explore the latest reference books for hematology, biochemistry, and microbiology right in your pocket.",
+                            category = "System"
+                        )
+                    )
+                    repository.addNotification(
+                        Notification(
+                            title = "Offline Study Feature Enabled",
+                            message = "You can now download reference books and read them offline at any time without internet access.",
+                            category = "Tutorial"
+                        )
+                    )
+                    repository.addNotification(
+                        Notification(
+                            title = "New Medical Books Added",
+                            message = "Check out the latest Clinical Immunology and Molecular Pathology additions in the main catalog.",
+                            category = "Updates"
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
         fetchBooks()

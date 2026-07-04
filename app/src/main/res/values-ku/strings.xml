@@ -98,4 +98,15 @@
     <string name="open_in_browser">کردنەوە لە وێبگەڕ</string>
     <string name="online_reader_title">خوێنەری ئۆنلاین</string>
     <string name="loading_online_reader">کتێبەکە بە ئۆنلاین باردەکرێت...</string>
+
+    <!-- Notification Strings -->
+    <string name="tab_notifications">ئاگادارییەکان</string>
+    <string name="notifications_title">ئاگادارییەکان</string>
+    <string name="notifications_subtitle">ئاگاداری نوێترین ڕاگەیەندراو و گۆڕانکارییەکان بن</string>
+    <string name="notifications_empty_title">هیچ ئاگادارییەک نییە</string>
+    <string name="notifications_empty_desc">لێرەدا ئاگادارییەکان، هۆشدارییەکانی سیستم و نوێکردنەوەی کتێبەکان پێدەگات.</string>
+    <string name="clear_all">سڕینەوەی هەموو</string>
+    <string name="mark_as_read">نیشانەکردن وەک خوێندراوە</string>
+    <string name="mark_all_read">خوێندنەوەی هەموو</string>
+    <string name="notification_deleted">ئاگادارییەکە سڕایەوە</string>
 </resources>
